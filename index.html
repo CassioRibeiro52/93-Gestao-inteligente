@@ -20,18 +20,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
-      // Inicialização segura do process.env
+      // Inicialização segura do process.env para o navegador
       window.process = window.process || { env: {} };
-      
-      // Script de resgate: Limpa o estado se o app travar por mais de 8 segundos
-      window.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-          const root = document.getElementById('root');
-          if (root && root.innerHTML === '') {
-            console.error("App failed to mount. Checking for storage conflicts...");
-          }
-        }, 8000);
-      });
     </script>
 
     <style>
