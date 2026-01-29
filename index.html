@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
@@ -6,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Gestão 93 - Controle de Vendas</title>
     
-    <!-- PWA Primary Meta Tags -->
+    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#312e81" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14,14 +13,15 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3081/3081648.png" />
     <link rel="manifest" href="/manifest.json" />
 
+    <!-- Scripts Externos Necessários -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
-      // Inicialização segura do process.env para o navegador
-      window.process = window.process || { env: {} };
+      // Polyfill para process.env no navegador
+      window.process = window.process || { env: { API_KEY: "" } };
     </script>
 
     <style>
@@ -30,6 +30,10 @@
         background-color: #f8fafc;
         -webkit-tap-highlight-color: transparent;
         margin: 0;
+        padding: 0;
+      }
+      #root {
+        min-height: 100vh;
       }
       .no-scrollbar::-webkit-scrollbar {
         display: none;

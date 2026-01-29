@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Customer, Sale, PaymentStatus, Installment, Product } from '../types';
 
@@ -32,7 +31,6 @@ const SalesManager: React.FC<SalesManagerProps> = ({ sales, customers, products,
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [updateStock, setUpdateStock] = useState(true);
 
-  // Sync price and cost when product is selected
   useEffect(() => {
     if (productId) {
       const p = products.find(prod => prod.id === productId);
@@ -157,9 +155,9 @@ const SalesManager: React.FC<SalesManagerProps> = ({ sales, customers, products,
         </div>
         <button 
           onClick={() => setShowAdd(!showAdd)}
-          className={`bg-${accentColor}-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-${accentColor}-700 transition shadow-sm`}
+          className={`bg-${accentColor}-600 text-white px-5 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-${accentColor}-700 transition shadow-lg active:scale-95`}
         >
-          {showAdd ? 'Cancelar' : 'Nova Venda'}
+          {showAdd ? 'Cancelar' : 'Lançar Venda'}
         </button>
       </div>
 
@@ -242,18 +240,18 @@ const SalesManager: React.FC<SalesManagerProps> = ({ sales, customers, products,
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Parcelas</label>
-                  <input type="number" min="1" max="24" value={numInstallments} onChange={e => setNumInstallments(Number(e.target.value))} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                  <input type="number" min="1" max="24" value={numInstallments} onChange={e => setNumInstallments(Number(e.target.value))} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-black" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Dia Venc.</label>
-                  <input type="number" min="1" max="31" value={dueDay} onChange={e => setDueDay(Number(e.target.value))} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm" />
+                  <input type="number" min="1" max="31" value={dueDay} onChange={e => setDueDay(Number(e.target.value))} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-black" />
                 </div>
               </div>
             )}
           </div>
           <div className="flex justify-end pt-2 border-t border-slate-50">
-            <button type="submit" className={`px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition shadow-lg bg-${accentColor}-600 text-white hover:bg-${accentColor}-700`}>
-              Confirmar Venda {mode === 'cash' ? 'à Vista' : 'a Prazo'}
+            <button type="submit" className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition shadow-xl bg-${accentColor}-600 text-white hover:bg-${accentColor}-700 active:scale-95`}>
+              Confirmar Lançamento {mode === 'cash' ? 'Vista' : 'Prazo'}
             </button>
           </div>
         </form>
@@ -319,7 +317,7 @@ const SalesManager: React.FC<SalesManagerProps> = ({ sales, customers, products,
                            <p className="text-sm font-bold text-rose-500">R$ {sale.totalCost.toFixed(2)}</p>
                         </div>
                         <div className="bg-emerald-600 p-3 rounded-xl shadow-md">
-                           <p className="text-[9px] font-bold text-emerald-100 uppercase mb-1">Ganho Real (Lucro)</p>
+                           <p className="text-[9px] font-black text-emerald-100 uppercase mb-1">Ganho Real (Lucro)</p>
                            <p className="text-sm font-black text-white">R$ {saleProfit.toFixed(2)}</p>
                         </div>
                      </div>
@@ -330,7 +328,7 @@ const SalesManager: React.FC<SalesManagerProps> = ({ sales, customers, products,
         })}
         {filteredSales.length === 0 && (
           <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 text-sm">
-             Nenhuma venda registrada nesta modalidade.
+             Nenhum lançamento registrado nesta modalidade.
           </div>
         )}
       </div>

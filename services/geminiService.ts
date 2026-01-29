@@ -2,8 +2,16 @@
 import { GoogleGenAI } from "@google/genai";
 import { Sale, Customer } from "../types";
 
-// Proteção para evitar travamento se a chave não estiver no ambiente
-const apiKey = process.env.API_KEY || "";
+// Função para obter a chave de forma segura
+const getApiKey = () => {
+  try {
+    return process.env.API_KEY || "";
+  } catch (e) {
+    return "";
+  }
+};
+
+const apiKey = getApiKey();
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 const COOLDOWN_TIME = 60000; 
@@ -13,15 +21,15 @@ export const getFinancialInsights = async (
   sales: Sale[],
   customers: Customer[]
 ) => {
-  if (!ai) return "⚠️ Chave de IA não configurada no ambiente.";
+  if (!ai) return "⚠️ Inteligência Artificial aguardando configuração de chave.";
 
   const now = Date.now();
   if (now < cooldownUntil) {
     const secondsLeft = Math.ceil((cooldownUntil - now) / 1000);
-    return `⚠️ IA em repouso por limite de cota. Tente novamente em ${secondsLeft}s.`;
+    return `⚠️ IA em repouso. Tente novamente em ${secondsLeft}s.`;
   }
 
-  if (sales.length === 0) return "Adicione vendas para análise.";
+  if (sales.length === 0) return "Registre vendas para análise da IA.";
 
   const context = {
     s: sales.length,
@@ -29,6 +37,7 @@ export const getFinancialInsights = async (
     c: customers.length,
     p: sales.flatMap(s => s.installments).filter(i => i.status !== 'PAID').length,
   };
+  
   const cacheKey = `gemini_cache_${JSON.stringify(context)}`;
   const cached = sessionStorage.getItem(cacheKey);
   
@@ -37,14 +46,14 @@ export const getFinancialInsights = async (
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Analise brevemente (máx 300 caracteres): Loja com ${context.s} vendas (R$ ${context.v}), ${context.c} clientes e ${context.p} parcelas abertas. Foco em saúde do caixa.`,
+      contents: `Analise brevemente (máx 300 caracteres): Loja com ${context.s} vendas (R$ ${context.v}), ${context.c} clientes e ${context.p} parcelas abertas. Foque em saúde financeira.`,
       config: {
         temperature: 0.5,
         maxOutputTokens: 200,
       }
     });
 
-    const text = response.text || "Insights não disponíveis no momento.";
+    const text = response.text || "Insights indisponíveis no momento.";
     sessionStorage.setItem(cacheKey, text);
     return text;
   } catch (error: any) {
@@ -52,9 +61,9 @@ export const getFinancialInsights = async (
     
     if (error?.message?.includes("429") || error?.status === 429) {
       cooldownUntil = Date.now() + COOLDOWN_TIME;
-      return "⚠️ Cota excedida no Google Gemini. O sistema entrou em modo de espera de 1 minuto.";
+      return "⚠️ Limite de cota atingido. IA em pausa de 1 min.";
     }
     
-    return "Falha na comunicação com a IA.";
+    return "Nota: IA temporariamente offline.";
   }
 };
