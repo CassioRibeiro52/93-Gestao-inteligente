@@ -5,6 +5,7 @@ import { Sale, Customer, PaymentStatus, Installment } from '../types';
 interface AgendaProps {
   sales: Sale[];
   customers: Customer[];
+  onPayInstallment: (saleId: string, installmentId: string, isPaying: boolean) => void;
 }
 
 interface GroupedInstallment extends Installment {
@@ -14,8 +15,7 @@ interface GroupedInstallment extends Installment {
   totalInstallments: number;
 }
 
-const Agenda: React.FC<AgendaProps> = ({ sales, customers }) => {
-  // Flatten and group installments by month
+const Agenda: React.FC<AgendaProps> = ({ sales, customers, onPayInstallment }) => {
   const getAllInstallments = (): GroupedInstallment[] => {
     return sales.flatMap(sale => 
       sale.installments.map((inst, idx) => {
@@ -41,35 +41,26 @@ const Agenda: React.FC<AgendaProps> = ({ sales, customers }) => {
     return acc;
   }, {} as Record<string, GroupedInstallment[]>);
 
-  // Sort months
   const sortedMonthKeys = Object.keys(groupedByMonth).sort((a, b) => {
-    const [monthA, yearA] = a.split(' de ');
-    const [monthB, yearB] = b.split(' de ');
-    const dateA = new Date(parseInt(yearA), new Date(Date.parse(monthA + " 1, 2012")).getMonth());
-    const dateB = new Date(parseInt(yearB), new Date(Date.parse(monthB + " 1, 2012")).getMonth());
-    return dateA.getTime() - dateB.getTime();
+    const parseMonth = (str: string) => {
+      const [m, y] = str.split(' de ');
+      return new Date(Date.parse(m + " 1, " + y)).getTime();
+    };
+    return parseMonth(a) - parseMonth(b);
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-slate-800">Agenda de Recebimentos</h2>
-        <div className="flex gap-2">
-          <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Pago
-          </span>
-          <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span> Pendente
-          </span>
-          <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase">
-            <span className="w-2 h-2 rounded-full bg-rose-500"></span> Atrasado
-          </span>
+        <div>
+          <h2 className="text-xl font-black text-slate-800 uppercase italic">Agenda Fashion</h2>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Controle de recebimentos futuros</p>
         </div>
       </div>
 
       {sortedMonthKeys.length === 0 && (
-        <div className="bg-white p-12 text-center rounded-2xl border border-dashed border-slate-200 text-slate-400">
-          Nenhum lançamento futuro encontrado.
+        <div className="bg-white p-12 text-center rounded-2xl border border-dashed border-slate-200 text-slate-400 font-bold uppercase text-xs">
+          Nenhum lançamento futuro.
         </div>
       )}
 
@@ -80,13 +71,13 @@ const Agenda: React.FC<AgendaProps> = ({ sales, customers }) => {
 
         return (
           <div key={month} className="space-y-4">
-            <div className="flex justify-between items-end border-b border-slate-200 pb-2">
-              <h3 className="text-lg font-bold text-indigo-900 capitalize">{month}</h3>
+            <div className="flex justify-between items-end border-b-2 border-indigo-100 pb-2">
+              <h3 className="text-lg font-black text-indigo-950 uppercase italic tracking-tighter capitalize">{month}</h3>
               <div className="text-right">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">Total do Mês</p>
-                <p className="text-sm font-bold text-slate-700">
+                <p className="text-[10px] font-black text-slate-400 uppercase">Previsão</p>
+                <p className="text-sm font-black text-slate-700">
                   R$ {monthTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} 
-                  <span className="text-xs text-emerald-600 ml-2">(Pago: R$ {monthPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>
+                  <span className="text-xs text-emerald-600 ml-2"> (Rec: R$ {monthPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>
                 </p>
               </div>
             </div>
@@ -96,39 +87,48 @@ const Agenda: React.FC<AgendaProps> = ({ sales, customers }) => {
                 const isOverdue = inst.status !== PaymentStatus.PAID && new Date(inst.dueDate) < new Date();
                 
                 return (
-                  <div key={inst.id} className={`bg-white p-4 rounded-2xl shadow-sm border ${isOverdue ? 'border-rose-100 bg-rose-50/20' : 'border-slate-100'} hover:shadow-md transition`}>
-                    <div className="flex justify-between items-start mb-2">
+                  <div key={inst.id} className={`bg-white p-5 rounded-3xl shadow-sm border-2 transition-all group ${inst.status === PaymentStatus.PAID ? 'border-emerald-100 bg-emerald-50/20' : isOverdue ? 'border-rose-100 bg-rose-50/20' : 'border-slate-100'}`}>
+                    <div className="flex justify-between items-start mb-4">
                       <div className="max-w-[70%]">
-                        <p className={`text-xs font-bold truncate ${inst.customerName.includes('🛒') ? 'text-amber-600' : 'text-indigo-600'}`}>{inst.customerName}</p>
-                        <p className="text-[10px] text-slate-400 truncate">{inst.saleDescription}</p>
+                        <p className={`text-xs font-black truncate uppercase tracking-tight ${inst.customerName.includes('🛒') ? 'text-amber-600' : 'text-indigo-800'}`}>{inst.customerName}</p>
+                        <p className="text-[10px] text-slate-400 truncate font-bold uppercase">{inst.saleDescription}</p>
                       </div>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                        inst.status === PaymentStatus.PAID ? 'bg-emerald-100 text-emerald-700' :
-                        isOverdue ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                      <span className={`text-[8px] font-black px-2 py-0.5 rounded-lg uppercase border ${
+                        inst.status === PaymentStatus.PAID ? 'bg-emerald-500 text-white border-emerald-600' :
+                        isOverdue ? 'bg-rose-500 text-white border-rose-600' : 'bg-amber-100 text-amber-700 border-amber-200'
                       }`}>
-                        {inst.status === PaymentStatus.PAID ? 'Pago' : isOverdue ? 'Atrasado' : 'Pendente'}
+                        {inst.status === PaymentStatus.PAID ? 'Recebido' : isOverdue ? 'Atrasado' : 'Pendente'}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-end mt-4">
+                    <div className="flex justify-between items-end">
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Vencimento</p>
-                        <p className="text-xs font-semibold text-slate-700">{new Date(inst.dueDate).toLocaleDateString('pt-BR')}</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Vencimento</p>
+                        <p className="text-xs font-black text-slate-700">{new Date(inst.dueDate).toLocaleDateString('pt-BR')}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Parcela {inst.installmentIndex}/{inst.totalInstallments}</p>
-                        <p className="text-sm font-bold text-slate-800">R$ {inst.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Parcela {inst.installmentIndex}/{inst.totalInstallments}</p>
+                        <p className="text-md font-black text-slate-900">R$ {inst.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                       </div>
                     </div>
-                    
-                    {inst.status === PaymentStatus.PARTIAL && (
-                      <div className="mt-2 pt-2 border-t border-slate-50">
-                         <div className="flex justify-between text-[9px] font-bold text-emerald-600 uppercase">
-                           <span>Aberto: R$ {(inst.amount - inst.paidAmount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                           <span>Pago: R$ {inst.paidAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                         </div>
-                      </div>
-                    )}
+
+                    <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+                       {inst.status !== PaymentStatus.PAID ? (
+                         <button 
+                            onClick={() => onPayInstallment(inst.saleId, inst.id, true)}
+                            className="w-full bg-emerald-600 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition"
+                         >
+                           Baixar Parcela
+                         </button>
+                       ) : (
+                         <button 
+                            onClick={() => onPayInstallment(inst.saleId, inst.id, false)}
+                            className="text-[9px] font-black text-slate-400 uppercase hover:text-rose-500 underline tracking-tighter"
+                         >
+                           Estornar Recebimento
+                         </button>
+                       )}
+                    </div>
                   </div>
                 );
               })}

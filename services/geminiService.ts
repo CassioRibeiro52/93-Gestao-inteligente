@@ -2,16 +2,19 @@
 import { GoogleGenAI } from "@google/genai";
 import { Sale, Customer } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Proteção para evitar travamento se a chave não estiver no ambiente
+const apiKey = process.env.API_KEY || "";
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-// Constants for quota management
-const COOLDOWN_TIME = 60000; // 1 minute
+const COOLDOWN_TIME = 60000; 
 let cooldownUntil = 0;
 
 export const getFinancialInsights = async (
   sales: Sale[],
   customers: Customer[]
 ) => {
+  if (!ai) return "⚠️ Chave de IA não configurada no ambiente.";
+
   const now = Date.now();
   if (now < cooldownUntil) {
     const secondsLeft = Math.ceil((cooldownUntil - now) / 1000);
@@ -20,7 +23,6 @@ export const getFinancialInsights = async (
 
   if (sales.length === 0) return "Adicione vendas para análise.";
 
-  // Generate a cache key based on data state
   const context = {
     s: sales.length,
     v: sales.reduce((acc, s) => acc + s.totalAmount, 0),
@@ -50,9 +52,9 @@ export const getFinancialInsights = async (
     
     if (error?.message?.includes("429") || error?.status === 429) {
       cooldownUntil = Date.now() + COOLDOWN_TIME;
-      return "⚠️ Cota excedida no Google Gemini. O sistema entrou em modo de espera de 1 minuto para evitar bloqueios. Seus dados de vendas permanecem salvos.";
+      return "⚠️ Cota excedida no Google Gemini. O sistema entrou em modo de espera de 1 minuto.";
     }
     
-    return "Falha na comunicação com a IA. Tente atualizar a página.";
+    return "Falha na comunicação com a IA.";
   }
 };
